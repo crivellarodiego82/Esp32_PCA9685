@@ -1,0 +1,342 @@
+/*
+ * Crivellaro Diego
+ * Copyright (C) 2022 :
+ * SDA 21
+ * SCL 22
+ * OE  -
+ * VCC 3.3v
+ * V+  5v
+ *
+ */
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <Servo.h>
+#include "Wire.h"
+#include "Adafruit_PWMServoDriver.h"
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+
+#define MIN_PULSE_WIDTH 600
+#define MAX_PULSE_WIDTH 2600
+#define FREQUENCY 50
+ 
+Servo pan; 
+Servo tilt;
+Servo servo1;
+Servo servo2;
+
+// Parametri WiFi, MQTT 
+const char* ssid = "SSID";            // WiFi SSID
+const char* password = "Password";       // WiFi Password
+const char* mqtt_server = "10.0.2.43";        // IP Broker MQTT
+const char* topic_pan = "servo/pan";          // MQTT servo Pan
+const char* topic_tilt = "servo/tilt";        // MQTT servo Tilt
+
+//Servo Generico
+const char* topic_servo1 = "servo/servo1";            // Servo 1
+const char* topic_servo2 = "servo/servo2";           // Servo 2
+const char* topic_servo_pca0 = "topic_servo_pca0";  // Servo PCA9685
+const char* topic_servo_pca1 = "topic_servo_pca1";
+const char* topic_servo_pca2 = "topic_servo_pca2";
+const char* topic_servo_pca3 = "topic_servo_pca3";
+const char* topic_servo_pca4 = "topic_servo_pca4";
+const char* topic_servo_pca5 = "topic_servo_pca5";
+const char* topic_servo_pca6 = "topic_servo_pca6";
+const char* topic_servo_pca7 = "topic_servo_pca7";
+const char* topic_servo_pca8 = "topic_servo_pca8";
+const char* topic_servo_pca9 = "topic_servo_pca9";
+const char* topic_servo_pca10 = "topic_servo_pca10";
+const char* topic_servo_pca11 = "topic_servo_pca11";
+const char* topic_servo_pca12 = "topic_servo_pca12";
+const char* topic_servo_pca13 = "topic_servo_pca13";
+const char* topic_servo_pca14 = "topic_servo_pca14";
+const char* topic_servo_pca15 = "topic_servo_pca15";
+const char* topic_servo_pca16 = "topic_servo_pca16";
+
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+long lastMsg = 0;
+char msg[50];
+int value = 0;
+
+void setup() {
+
+  Serial.begin(115200);
+
+ //Ardafruit
+  pwm.begin();
+  pwm.setPWMFreq(FREQUENCY);
+ 
+ //Servo Pan Tilt
+  
+  pan.attach(4);
+  tilt.attach(5);
+ 
+
+ //Servo Generico
+  servo1.attach(18);
+  servo2.attach(19);
+  
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+  
+}
+
+int pulseWidth(int angle) {
+  int pulse_wide, analog_value;
+  pulse_wide = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
+  analog_value = int(float(pulse_wide) / 1000000 * FREQUENCY * 4096);
+  return analog_value;
+}
+
+void setup_wifi() {
+  delay(10);
+  // Avviato a connessione WiFi avvenuta
+  Serial.println();
+  Serial.print("Connesso a: ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connesso");
+  Serial.println("IP : ");
+  Serial.println(WiFi.localIP());
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+ String string;
+ // Affiche le topic entrant - display incoming Topic
+ Serial.print("Messaggio Ricevuto [");
+ Serial.print(topic);
+ Serial.print("] ");
+ // Decodifico messaggio - Decodifico messaggio payload
+ for (int i = 0; i < length; i++) {
+ string+=((char)payload[i]); 
+ }
+ // Visualizza messaggio in arrivo
+ Serial.print(string);
+ Serial.print(" toInt ");
+ // Converti posizione in intero: converte la posizione in numero intero
+ int pos = string.toInt(); 
+ Serial.println(pos);
+
+ // Determina quale servo deve essere spostato
+ if ( strcmp(topic, topic_pan) == 0 ) {
+ Serial.print("Pan ");
+ Serial.println(pos);
+ pan.write(pos); 
+ }
+ if ( strcmp(topic, topic_tilt) == 0 ) {
+ Serial.print("Tilt ");
+ Serial.println(pos);
+ tilt.write(pos); 
+ }
+
+ if ( strcmp(topic, topic_servo1) == 0 ) {
+ Serial.print("Servo1 ");
+ Serial.println(pos);
+ servo1.write(pos); 
+ }
+
+
+ if ( strcmp(topic, topic_servo2) == 0 ) {
+ Serial.print("Servo2 ");
+ Serial.println(pos);
+ servo2.write(pos); 
+ }
+
+if ( strcmp(topic, topic_servo_pca0) == 0 ) {
+ Serial.print("Servo_0_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(0, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+ if ( strcmp(topic, topic_servo_pca1) == 0 ) {
+ Serial.print("Servo_1_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(1, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca2) == 0 ) {
+ Serial.print("Servo_2_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(2, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca3) == 0 ) {
+ Serial.print("Servo_3_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(3, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+
+if ( strcmp(topic, topic_servo_pca4) == 0 ) {
+ Serial.print("Servo_4_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(4, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca5) == 0 ) {
+ Serial.print("Servo_5_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(5, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca6) == 0 ) {
+ Serial.print("Servo_6_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(6, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca7) == 0 ) {
+ Serial.print("Servo_7_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(7, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+
+if ( strcmp(topic, topic_servo_pca8) == 0 ) {
+ Serial.print("Servo_8_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(8, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca9) == 0 ) {
+ Serial.print("Servo_9_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(9, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca10) == 0 ) {
+ Serial.print("Servo_10_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(10, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca11) == 0 ) {
+ Serial.print("Servo_11_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(11, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+
+if ( strcmp(topic, topic_servo_pca12) == 0 ) {
+ Serial.print("Servo_12_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(12, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+    
+if ( strcmp(topic, topic_servo_pca13) == 0 ) {
+ Serial.print("Servo_13_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(13, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+  
+if ( strcmp(topic, topic_servo_pca14) == 0 ) {
+ Serial.print("Servo_14_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(14, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+  
+if ( strcmp(topic, topic_servo_pca15) == 0 ) {
+ Serial.print("Servo_15_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(15, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+  
+if ( strcmp(topic, topic_servo_pca16) == 0 ) {
+ Serial.print("Servo_16_Pwm ");
+ Serial.println(pos);
+//setPWM(channel, on, off)
+ pwm.setPWM(16, 0, pulseWidth(pos));
+ delay(1000); 
+ }
+  
+
+ 
+ delay(15); 
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attendo MQTT...");
+    // Attempt to connect
+    if (client.connect("ESP_Client")) {
+      Serial.println("connected");
+      client.subscribe(topic_pan); 
+      client.subscribe(topic_tilt);
+      client.subscribe(topic_servo1); 
+      client.subscribe(topic_servo2);
+      client.subscribe(topic_servo_pca0);
+      client.subscribe(topic_servo_pca1);
+      client.subscribe(topic_servo_pca2);
+      client.subscribe(topic_servo_pca3);
+      client.subscribe(topic_servo_pca4);
+      client.subscribe(topic_servo_pca5);
+      client.subscribe(topic_servo_pca6);
+      client.subscribe(topic_servo_pca7);
+      client.subscribe(topic_servo_pca8);
+      client.subscribe(topic_servo_pca9);
+      client.subscribe(topic_servo_pca10);
+      client.subscribe(topic_servo_pca11);
+      client.subscribe(topic_servo_pca12);
+      client.subscribe(topic_servo_pca13);
+      client.subscribe(topic_servo_pca14);
+      client.subscribe(topic_servo_pca15);
+      client.subscribe(topic_servo_pca16);      
+      
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" Attendo e riprovo");
+      // Attendo cinque secondi e riprovo
+      delay(5000);
+    }
+  }
+}
+void loop() {   
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+  delay(100);
+}
